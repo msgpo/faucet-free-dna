@@ -7,7 +7,9 @@
     "build": "ng build --prod",
     "test": "echo test",
     "lint": "ng lint",
-    "e2e": "ng e2e"
+    "e2e": "ng e2e",
+    "prepare": "node patch-webpack.js"
+
   },
   "private": true,
   "dependencies": {
@@ -28,7 +30,9 @@
     "ng-recaptcha": "^4.2.1",
     "rxjs": "~6.3.3",
     "tslib": "^1.9.0",
-    "zone.js": "~0.8.26"
+    "zone.js": "~0.8.26",
+    "bitsharesjs": "github:mvs-develop/dna-js#dna",
+    "bitsharesjs-ws": "github:mvs-develop/dna-ws-js#dna"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "~0.11.0",
