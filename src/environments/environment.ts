@@ -5,10 +5,10 @@
 export const environment = {
   production: false,
   firebase: {
-    databaseURL: 'mvs-free',
-    projectId: 'mvs-free',
+    databaseURL: 'faucet-free-dna',
+    projectId: 'faucet-free-dna',
   },
-  address: "tLhKaek9gxAauzquSFiJeZRoHLMVjkVmq6"
+  address: "mvs"
 };
 
 /*

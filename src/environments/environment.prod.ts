@@ -1,8 +1,8 @@
 export const environment = {
   production: true,
   firebase: {
-    databaseURL: 'mvs-free',
-    projectId: 'mvs-free',
+    databaseURL: 'faucet-free-dna',
+    projectId: 'faucet-free-dna',
   },
   address: "mvs"
 };
