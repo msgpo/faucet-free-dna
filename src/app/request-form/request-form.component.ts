@@ -30,7 +30,7 @@ export class RequestFormComponent implements OnInit {
       ]),
       address: new FormControl(null, [
         Validators.required,
-        Validators.pattern(/^[a-z][a-z0-9-.]{1, 63}$/)
+        Validators.pattern(/^[a-z][a-z0-9-.]{0,63}$/)
       ]),
     });
   }
