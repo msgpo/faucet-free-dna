@@ -4,5 +4,5 @@ export const environment = {
     databaseURL: 'mvs-free',
     projectId: 'mvs-free',
   },
-  address: "tLhKaek9gxAauzquSFiJeZRoHLMVjkVmq6"
+  address: "mvs"
 };

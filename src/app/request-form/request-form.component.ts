@@ -30,7 +30,7 @@ export class RequestFormComponent implements OnInit {
       ]),
       address: new FormControl(null, [
         Validators.required,
-        Validators.pattern(/^t[A-Za-z0-9]{33}$/)
+        Validators.pattern(/^[a-z][a-z0-9-.]{1, 63}$/)
       ]),
     });
   }
@@ -42,7 +42,7 @@ export class RequestFormComponent implements OnInit {
   onSubmit() {
     this.loading=true
     this.http.post('/api/send', this.applyForm.value).subscribe((res:SendResponse) => {
-      this.message = `We send you some testnet ETP with transaction ${res.hash}. Go change the world!`
+      this.message = `We send you some testnet DNA with transaction ${res.hash}. Go change the world!`
       console.log(res)
       this.loading=false
       this.reset()
