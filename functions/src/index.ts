@@ -121,10 +121,10 @@ export const wsApi = {
     removeHandler(id) {
         delete this._handlers[id];
     },
-    updateListener() {
+    updateListener(rgobjects) {
         //console.log("updateListener:" + objects.length);
         let that = this;
-        objects = objects.flat();
+        let objects = rgobjects.flat();
         for (let i = 0; i < objects.length; i++) {
             let obj = objects[i];
             // console.log("updateListener:" + obj.id);
