@@ -1,29 +1,25 @@
+import { wsApi } from '@/wsApi.js';
 import * as functions from 'firebase-functions'
 import * as admin from 'firebase-admin'
 import * as requestify from 'requestify'
 import * as rq from 'request-promise'
 import * as sgMail from '@sendgrid/mail'
 import { MailData } from '@sendgrid/helpers/classes/mail';
-
 var { Apis, ChainConfig } = require("bitsharesjs-ws");
 var { ops, PrivateKey, PublicKey, Signature, key, ChainStore, TransactionHelper, TransactionBuilder, Aes } = require('bitsharesjs');
 var bip39 = require('bip39');
 const { timeStamp } = require("console");
 
 
-let wsUri = 'wss://testnet.mvsdna.info/ws';
 ChainConfig.networks['DNA_NEST'] = {
     core_asset: 'DNA',
     address_prefix: 'DNA',
     chain_id: '19969b8cd3c7f00520722c08f97cebe80bb4443098e76726119c767d59354333',
 };
 ChainConfig.setChainId("19969b8cd3c7f00520722c08f97cebe80bb4443098e76726119c767d59354333");
-
 ChainConfig.setPrefix("DNA");
-let core_asset_id = '1.3.0';
-let TOKEN_SYMBOL = "DNA";
 
-console.log("### functions", functions.config());
+wsApi.init()
 
 const ENDPOINT = (functions.config().mvsd) ? functions.config().mvsd.endpoint : "https://testnet.mvsdna.info/rpc"
 const RECAPTCHA_SECRET = (functions.config().recaptcha) ? functions.config().recaptcha.secret : ""
@@ -46,12 +42,14 @@ db.settings({
 async function transfer_(pKey, fromAccount, toAccount, sendAmount, memo) {
     console.log(pKey.toWif());
 
-    let accounts = await Apis.instance().db_api().exec('get_accounts', [[fromAccount, toAccount], false]);
+    let instance = await wsApi.instance(false, false);
+
+    let accounts = await instance.db_api().exec('get_accounts', [[fromAccount, toAccount], false]);
     fromAccount = accounts.find(it => it.name == fromAccount);
     toAccount = accounts.find(it => it.name == toAccount);
     let memoFromKey = fromAccount.options.memo_key;
     let memoToKey = toAccount.options.memo_key;
-    let assets = await Apis.instance().db_api().exec('get_assets', [[sendAmount.asset, ChainConfig.networks['DNA_NEST'].core_asset], false]);
+    let assets = await instance.db_api().exec('get_assets', [[sendAmount.asset, ChainConfig.networks['DNA_NEST'].core_asset], false]);
     let sendAsset = assets.find(it => it.symbol == sendAmount.asset);
     let coreAsset = assets.find(it => it.symbol == ChainConfig.networks['DNA_NEST'].core_asset);
 
@@ -261,19 +259,36 @@ export const send = functions.https.onRequest((req, res) => {
 })
 
 //todo use bitsharesjs
-function _send(address, amount) {
-    return requestify.post(ENDPOINT, {
-        jsonrpc: "3.0",
-        method: "send",
-        params: [ACCOUNT_NAME, ACCOUNT_AUTH, address, amount]
-    })
-        .then(response => JSON.parse(response.body))
-        .then(response => {
-            if (response.error)
-                throw Error(response.error.message)
-            console.log(response)
-            if (response.result.hash)
-                return response.result
-            throw Error('Unable to send.')
+ function _send(address, amount) {
+    // return requestify.post(ENDPOINT, {
+    //     jsonrpc: "3.0",
+    //     method: "send",
+    //     params: [ACCOUNT_NAME, ACCOUNT_AUTH, address, amount]
+    // })
+    //     .then(response => JSON.parse(response.body))
+    //     .then(response => {
+    //         if (response.error)
+    //             throw Error(response.error.message)
+    //         console.log(response)
+    //         if (response.result.hash)
+    //             return response.result
+    //         throw Error('Unable to send.')
+    //     })
+    let pkey = PrivateKey.fromWif(ACCOUNT_AUTH);
+
+    return transfer_(pkey, 
+        ACCOUNT_NAME, address,  
+        {
+            amount: amount,
+            asset: "DNA"
+        },
+        "from free faucet").
+        then((transferResult) => {
+            let txId = transferResult && transferResult.length
+                ? transferResult[0].id
+                : "";
+            let rt = transferResult[0];
+            rt.hash = txId;
+            return  rt;
         })
 }
