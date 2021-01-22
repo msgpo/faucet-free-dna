@@ -48,7 +48,7 @@ export const wsApi = {
             // 初始化订阅
             Apis.instance().db_api().exec("set_subscribe_callback", [function (objects) {
                 //console.log("subscribe callbacked");
-                that.updateListener(objects)
+                //that.updateListener(objects)
             }, false]).then((data) => {
                 console.log("ws api subscribed");
                 that._initedSubscribe = true;
