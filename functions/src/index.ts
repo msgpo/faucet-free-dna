@@ -342,9 +342,10 @@ export const send = functions.https.onRequest((req, res) => {
         .then(() => _send(address, ETP_AMOUNT))
         .then(tx => {
             res.status(200).json(tx)
+            let strStore = JSON.stringify(tx);
             return Promise.all([
                 db.collection("transfer").doc().set({
-                    address, tx, date: new Date(), hash: tx.hash, amount: ETP_AMOUNT
+                    address, strStore, date: new Date(), hash: tx.hash, amount: ETP_AMOUNT
                 }),
                 db.collection("user").doc().set({
                     email, address, date: new Date()
