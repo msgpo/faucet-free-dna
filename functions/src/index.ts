@@ -1,13 +1,11 @@
-import { wsApi } from '@/wsApi.js';
+import { wsApi } from './wsApi.js';
 import * as functions from 'firebase-functions'
 import * as admin from 'firebase-admin'
 import * as requestify from 'requestify'
 import * as rq from 'request-promise'
-import * as sgMail from '@sendgrid/mail'
-import { MailData } from '@sendgrid/helpers/classes/mail';
 var { Apis, ChainConfig } = require("bitsharesjs-ws");
 var { ops, PrivateKey, PublicKey, Signature, key, ChainStore, TransactionHelper, TransactionBuilder, Aes } = require('bitsharesjs');
-var bip39 = require('bip39');
+
 const { timeStamp } = require("console");
 
 
@@ -39,14 +37,14 @@ db.settings({
     timestampsInSnapshots: true
 });
 
-async function transfer_(pKey, fromAccount, toAccount, sendAmount, memo) {
+async function transfer_(pKey, strfromAccount, strtoAccount, sendAmount, memo) {
     console.log(pKey.toWif());
 
     let instance = await wsApi.instance(false, false);
 
-    let accounts = await instance.db_api().exec('get_accounts', [[fromAccount, toAccount], false]);
-    fromAccount = accounts.find(it => it.name == fromAccount);
-    toAccount = accounts.find(it => it.name == toAccount);
+    let accounts = await instance.db_api().exec('get_accounts', [[strfromAccount, strtoAccount], false]);
+    let fromAccount = accounts.find(it => it.name == strfromAccount);
+    let toAccount = accounts.find(it => it.name == strtoAccount);
     let memoFromKey = fromAccount.options.memo_key;
     let memoToKey = toAccount.options.memo_key;
     let assets = await instance.db_api().exec('get_assets', [[sendAmount.asset, ChainConfig.networks['DNA_NEST'].core_asset], false]);
@@ -91,26 +89,7 @@ async function transfer_(pKey, fromAccount, toAccount, sendAmount, memo) {
     return result;
 }
 
-async function my_transfer(to, amount) {
-    
-    let pkey = PrivateKey.fromWif(ACCOUNT_AUTH);
-
-    let transferResult = await transfer_(
-        pkey,
-        "mvs",
-        to,
-        {
-        amount: amount,
-        asset: "DNA"
-        },
-        "this is memo"
-    );
-
-    let txId = transferResult && transferResult.length ? transferResult[0].id : "";
-    console.log(txId);
-}
-
-async function processTranscation(tr) {
+async function processTranscation(tr): Promise<any> {
     let instance = Apis.instance();
     await tr.finalize();
     tr.sign(instance.chain_id);
@@ -124,29 +103,27 @@ async function processTranscation(tr) {
     if (!tr.operations.length) {
         throw new Error("no operations");
     }
-    let tr_object = ops.signed_transaction.toObject(tr);
+    const tr_object = ops.signed_transaction.toObject(tr);
     console.log(JSON.stringify(tr.serialize()))
 
-    return new Promise((resolve, reject) => {
-        instance.network_api()
-        .exec("broadcast_transaction_with_callback", [
-            function (res) {
-            return resolve(res);
-            },
-            tr_object
-        ])
-        .then(function (res) {
-            //console.log('... broadcast success, waiting for callback')
-            //if (was_broadcast_callback) was_broadcast_callback();
-            return;
-        })
-        .catch(error => {
-            // console.log may be redundant for network errors, other errors could occur
-            return reject(error);
-        });
+    return new Promise((resolve, reject):Promise<any> => {
+        return instance.network_api()
+            .exec("broadcast_transaction_with_callback", [
+                function (res) {
+                    resolve(res);
+                },
+                tr_object,
+            ])
+            // .then(function (res) {
+            //     //console.log('... broadcast success, waiting for callback')
+            //     //if (was_broadcast_callback) was_broadcast_callback();
+            //     return;
+            // })
+            .catch(error => {
+                // console.log may be redundant for network errors, other errors could occur
+                reject(error);
+            });
     })
-
-
 }
 
 /* curl --data '{"jsonrpc": "2.0", "params": ["database", "get_dynamic_global_properties", []], "method": "call", "id": 10}'  https://testnet.mvsdna.info/rpc
@@ -274,20 +251,21 @@ export const send = functions.https.onRequest((req, res) => {
     //             return response.result
     //         throw Error('Unable to send.')
     //     })
-    let pkey = PrivateKey.fromWif(ACCOUNT_AUTH);
+    const pkey = PrivateKey.fromWif(ACCOUNT_AUTH);
 
     return transfer_(pkey, 
-        ACCOUNT_NAME, address,  
+        ACCOUNT_NAME, 
+        address,  
         {
             amount: amount,
             asset: "DNA"
         },
         "from free faucet").
         then((transferResult) => {
-            let txId = transferResult && transferResult.length
+            const txId = transferResult
                 ? transferResult[0].id
                 : "";
-            let rt = transferResult[0];
+            const rt = transferResult[0];
             rt.hash = txId;
             return  rt;
         })

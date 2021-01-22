@@ -17,11 +17,14 @@
     "firebase-functions": "^2.1.0",
     "request": "^2.88.0",
     "request-promise": "^4.2.2",
-    "requestify": "^0.2.5"
+    "requestify": "^0.2.5",
+    "bitsharesjs": "github:mvs-develop/dna-js#dna",
+    "bitsharesjs-ws": "github:mvs-develop/dna-ws-js#dna"
   },
   "devDependencies": {
     "tslint": "~5.8.0",
     "typescript": "~2.8.3"
   },
-  "private": true
+  "private": true,
+  "engines": {"node": "10"}
 }
