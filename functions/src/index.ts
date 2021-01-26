@@ -332,7 +332,10 @@ export const send = functions.https.onRequest((req, res) => {
         transform: (response: string) => JSON.parse(response)
     })
         .then(result => {
-            if (!result.success) throw Error("Recaptcha verification failed. Are you a robot?")
+            if (!result.success) {
+                console.info("##recapcha error result: ", result)
+                throw Error("Recaptcha verification failed. Are you a robot?")
+            }
             return db.collection('transfer').where('address', '==', address).get()
                 .then(snapshot => {
                     if (!snapshot.empty) throw Error('Address already in history')
